@@ -83,6 +83,7 @@ button:active{transform:scale(.985)}
   const W=420,H=700,LANE_Y=H-120,LANE_LEFT=42,LANE_RIGHT=378,BALL_R=9,ZONE_HALF=38;
   let dpr=1,running=false,last=0,score=0,wave=1,best=0;
   let enemies=[],bullets=[],particles=[],stars=[],powerups=[],ebullets=[],boss=null,hearts=[],snake=null;
+  let recordStart=0,recordBroken=false,recordFlashUntil=0;
   let formationOffset=0,formationDir=1,formationSpeed=15,descentSpeed=3;
   let ballX=LANE_LEFT,ballDir=1,ballSpeed=84,zoneX=260,zoneDir=-1,zoneSpeed=26,shipX=LANE_LEFT;
   let pauseUntil=0,feedback='',feedbackUntil=0,slowUntil=0,doubleUntil=0,bigZoneUntil=0,lives=3,adActive=false,adUntil=0,mode='A',kills=0,recordB=0,revivesUsed=0,lossesA=0,skillActive=false,freeShot=false;
@@ -118,6 +119,13 @@ button:active{transform:scale(.985)}
   function sfxFail(){ensureAudio();tone(160,.18,'square',.14,-120)}
   function updateLives(){const el=document.getElementById('lives');if(el)el.textContent='♥'.repeat(Math.max(0,lives))}
   function updateKills(){const el=document.getElementById('kills');if(el)el.textContent='Kills:'+kills}
+  function triggerRecordBreak(){
+    recordBroken=true;recordFlashUntil=performance.now()+1800;
+    feedback='¡NUEVO RÉCORD!';feedbackUntil=performance.now()+1800;
+    sfxWave();ensureAudio();
+    if(audioCtx){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,.18,'triangle',.16),i*110))}
+    for(let i=0;i<40;i++){const a=Math.random()*6.283;particles.push({x:W/2,y:H/2,vx:Math.cos(a)*(60+Math.random()*120),vy:Math.sin(a)*(60+Math.random()*120),life:.9,max:.9,r:2+Math.random()*3})}
+  }
   // --- Música arcade ---
   const MELODY=[330,0,330,392,440,0,392,330,294,0,330,0,392,440,523,440,392,0,330,0,294,0,262,0,294,330,392,440,392,330,294,0,330,0,392,440,523,0,440,392,330,294,262,0,294,0,330,0,262,0,294,0,330,392,440,0,392,330,294,0,262,0,196,0];
   const BASS=[165,0,0,0,165,0,0,0,196,0,0,0,220,0,0,0,165,0,0,0,131,0,0,0,165,0,0,0,196,0,0,0];
@@ -186,7 +194,7 @@ button:active{transform:scale(.985)}
   function startGame(w,m){
     ensureAudio();
     w=w||1;m=m||'A';mode=m;
-    score=0;wave=w;kills=0;bullets=[];particles=[];powerups=[];ebullets=[];boss=null;hearts=[];snake=null;ballX=LANE_LEFT;ballDir=1;ballSpeed=84+skills.speed;zoneX=260;zoneDir=-1;zoneSpeed=26+skills.zone;shipX=LANE_LEFT;pauseUntil=0;feedback='';feedbackUntil=0;slowUntil=0;doubleUntil=0;bigZoneUntil=0;pendingDeath=0;lives=3+skills.life;revivesUsed=0;freeShot=false;updateLives();updateKills();
+    score=0;wave=w;kills=0;bullets=[];particles=[];powerups=[];ebullets=[];boss=null;hearts=[];snake=null;ballX=LANE_LEFT;recordStart=best;recordBroken=false;recordFlashUntil=0;ballDir=1;ballSpeed=84+skills.speed;zoneX=260;zoneDir=-1;zoneSpeed=26+skills.zone;shipX=LANE_LEFT;pauseUntil=0;feedback='';feedbackUntil=0;slowUntil=0;doubleUntil=0;bigZoneUntil=0;pendingDeath=0;lives=3+skills.life;revivesUsed=0;freeShot=false;updateLives();updateKills();
     scoreEl.textContent='0';waveEl.textContent=wave;makeWave();running=true;last=performance.now();currentTempo=(wave%5===0)?100:130;startMusic(currentTempo);
     overlay.classList.add('hidden');const _b=document.getElementById('startA');if(_b)_b.style.display='none';const _b2=document.getElementById('startB');if(_b2)_b2.style.display='none';requestAnimationFrame(loop);
   }
@@ -307,7 +315,7 @@ button:active{transform:scale(.985)}
           // crecer
           snake.segments.push({...snake.segments[snake.segments.length-1]});
           burst(ex,ey);sfxHit();
-          if(score>best){best=score;bestEl.textContent=best;try{localStorage.setItem('miniInvadersBest',String(best))}catch(err){}}
+          if(score>best){if(!recordBroken&&score>recordStart)triggerRecordBreak();best=score;bestEl.textContent=best;try{localStorage.setItem('miniInvadersBest',String(best))}catch(err){}}
         }
       }
       // seguir cuerpo (serpiente)
@@ -363,7 +371,7 @@ button:active{transform:scale(.985)}
         const dx=b.x-boss.x,dy=b.y-(boss.y+Math.sin(boss.bob)*2);
         if(dx*dx+dy*dy<(boss.r+6)**2){boss.hp--;b.dead=true;burst(boss.x,boss.y);sfxHit();
           if(boss.hp<=0){boss.alive=false;score+=500+(boss.cycle-1)*200;scoreEl.textContent=score;feedback='¡BOSS DERROTADO!';feedbackUntil=performance.now()+1500;sfxWave();
-            if(score>best){best=score;bestEl.textContent=best;try{localStorage.setItem('miniInvadersBest',String(best))}catch(err){}}
+            if(score>best){if(!recordBroken&&score>recordStart)triggerRecordBreak();best=score;bestEl.textContent=best;try{localStorage.setItem('miniInvadersBest',String(best))}catch(err){}}
             wave++;waveEl.textContent=wave;boss=null;makeWave();
           }
         }
@@ -404,7 +412,7 @@ button:active{transform:scale(.985)}
               feedback='¡GRAN RECOMPENSA POR KILLS!';feedbackUntil=performance.now()+1400;sfxWave();noise(.2,.12);
             }
           }
-          if(score>best){best=score;bestEl.textContent=best;try{localStorage.setItem('miniInvadersBest',String(best))}catch(err){}}
+          if(score>best){if(!recordBroken&&score>recordStart)triggerRecordBreak();best=score;bestEl.textContent=best;try{localStorage.setItem('miniInvadersBest',String(best))}catch(err){}}
           break;
         }
       }
@@ -537,6 +545,13 @@ button:active{transform:scale(.985)}
   function draw(){
     if(bgReady){ctx.drawImage(bgImg,0,0,W,H)}else{ctx.clearRect(0,0,W,H)};
     for(const s of stars){ctx.globalAlpha=s.a;ctx.fillStyle='#dce9ff';ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,6.283);ctx.fill()}ctx.globalAlpha=1;
+    if(recordFlashUntil>performance.now()){
+      const t=(recordFlashUntil-performance.now())/1800;
+      const g=ctx.createRadialGradient(W/2,H/2,10,W/2,H/2,420);
+      g.addColorStop(0,'rgba(255,215,0,'+(0.35*t)+')');
+      g.addColorStop(1,'rgba(255,215,0,0)');
+      ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+    }
     const readyNow=Math.abs(ballX-zoneX)<=(performance.now()<bigZoneUntil?60:ZONE_HALF);
     if(running&&readyNow){
       const g=ctx.createLinearGradient(0,H,0,H/2);
