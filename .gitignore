@@ -1,0 +1,29 @@
+# Dependencias
+node_modules/
+
+# Builds Android
+android/build/
+android/app/build/
+android/.gradle/
+android/capacitor-cordova-android-plugins/build/
+android/capacitor-cordova-android-plugins/.gradle/
+
+# Secretos y archivos firmados
+release.keystore
+*.keystore
+*.jks
+android/gradle.properties
+*.aab
+*.apk
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporales
+*.log

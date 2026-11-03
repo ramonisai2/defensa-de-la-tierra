@@ -1,0 +1,9 @@
+# Copia este archivo a gradle.properties y rellena tus valores reales.
+# NO subas gradle.properties a Git (contiene secretos).
+
+org.gradle.jvmargs=-Xmx1536m
+android.useAndroidX=true
+
+RELEASE_STORE_PASSWORD=tu_password_aqui
+RELEASE_KEY_ALIAS=defensa_release
+RELEASE_KEY_PASSWORD=tu_password_aqui
