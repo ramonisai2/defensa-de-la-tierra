@@ -98,6 +98,7 @@ button:active{transform:scale(.985)}
   function ensureAudio(){if(!audioCtx){try{audioCtx=new (window.AudioContext||window.webkitAudioContext)()}catch(e){audioCtx=null}}if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume()}
   function tone(freq,dur,type='square',gain=.18,slide=0){
     if(!audioCtx)return;
+    gain=Math.min(1,gain+0.05);
     const t=audioCtx.currentTime,o=audioCtx.createOscillator(),g=audioCtx.createGain();
     o.type=type;o.frequency.setValueAtTime(freq,t);
     if(slide)o.frequency.exponentialRampToValueAtTime(Math.max(40,freq+slide),t+dur);
@@ -106,6 +107,7 @@ button:active{transform:scale(.985)}
   }
   function noise(dur=.15,gain=.12){
     if(!audioCtx)return;
+    gain=Math.min(1,gain+0.05);
     const t=audioCtx.currentTime,buf=audioCtx.createBuffer(1,audioCtx.sampleRate*dur,audioCtx.sampleRate),d=buf.getChannelData(0);
     for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length);
     const src=audioCtx.createBufferSource(),g=audioCtx.createGain();
