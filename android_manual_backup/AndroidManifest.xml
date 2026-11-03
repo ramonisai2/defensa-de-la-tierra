@@ -1,0 +1,32 @@
+<uses-sdk
+    android:minSdkVersion="21"
+    android:targetSdkVersion="35" />
+
+<!-- Permisos necesarios para publicidad y conexión -->
+<uses-permission android:name="android.permission.INTERNET" />
+<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+<application
+    android:label="@string/app_name"
+    android:icon="@drawable/ic_launcher"
+    android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
+
+    <!-- Identificador de aplicación AdMob -->
+    <meta-data
+        android:name="com.google.android.gms.ads.APPLICATION_ID"
+        android:value="ca-app-pub-5985952299311220~9136271253" />
+
+    <activity
+        android:name=".MainActivity"
+        android:exported="true"
+        android:configChanges="orientation|screenSize|keyboardHidden"
+        android:screenOrientation="portrait">
+
+        <intent-filter>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent-filter>
+
+    </activity>
+
+</application>
