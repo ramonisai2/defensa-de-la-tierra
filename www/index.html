@@ -686,7 +686,17 @@ button:active{transform:scale(.985)}
       ctx.beginPath();ctx.arc(explosionX,explosionY,10+t*90,0,6.283);ctx.stroke();ctx.shadowBlur=0;
       ctx.fillStyle='rgba(255,215,0,'+(0.6*(1-t))+')';ctx.beginPath();ctx.arc(explosionX,explosionY,8+t*40,0,6.283);ctx.fill();
     }
-    if(feedback&&performance.now()<feedbackUntil){ctx.font='bold 13px system-ui';ctx.textAlign='center';ctx.fillStyle='#d9ffad';ctx.fillText(feedback,W/2,LANE_Y+34)}
+    if(feedback&&performance.now()<feedbackUntil){
+      const isCombo=feedback.indexOf('COMBO')===0;
+      ctx.save();ctx.translate(W/2,LANE_Y+34);
+      if(isCombo){
+        const sc=1+Math.min(combo,8)*0.12;
+        const ang=(combo%7-3)*0.1;
+        ctx.rotate(ang);ctx.scale(sc,sc);
+      }
+      ctx.font='bold 13px system-ui';ctx.textAlign='center';ctx.fillStyle='#d9ffad';ctx.fillText(feedback,0,0);
+      ctx.restore();
+    }
     if(shaking)ctx.restore();
   }
   function loop(now){if(!running)return;const dt=Math.min((now-last)/1000,.04);last=now;update(dt,now);draw();if(running)requestAnimationFrame(loop)}
