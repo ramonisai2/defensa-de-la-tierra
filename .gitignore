@@ -27,3 +27,10 @@ Thumbs.db
 
 # Temporales
 *.log
+
+# Archivos sueltos / backup
+android_manual_backup/
+Icono*.png
+Marco*.png
+Mini Invaders*.png
+mini_invaders_revisado*.html
