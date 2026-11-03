@@ -89,7 +89,7 @@ button:active{transform:scale(.985)}
   let recordStart=0,recordBroken=false,recordFlashUntil=0,explosionUntil=0,explosionX=0,explosionY=0,shakeUntil=0;
   let formationOffset=0,formationDir=1,formationSpeed=15,descentSpeed=3;
   let ballX=LANE_LEFT,ballDir=1,ballSpeed=84,zoneX=260,zoneDir=-1,zoneSpeed=26,shipX=LANE_LEFT;
-  let pauseUntil=0,feedback='',feedbackUntil=0,slowUntil=0,doubleUntil=0,bigZoneUntil=0,lives=3,adActive=false,adUntil=0,mode='A',kills=0,recordB=0,revivesUsed=0,lossesA=0,skillActive=false,freeShot=false,combo=0,comboDecayUntil=0;
+  let pauseUntil=0,feedback='',feedbackUntil=0,slowUntil=0,doubleUntil=0,bigZoneUntil=0,lives=3,adActive=false,adUntil=0,mode='A',kills=0,recordB=0,revivesUsed=0,lossesA=0,skillActive=false,freeShot=false,combo=0,comboDecayUntil=0,missStreak=0,invulnerableUntil=0;
   let skills={speed:0,zone:0,life:0};
   try{const s=JSON.parse(localStorage.getItem('miniInvadersSkills')||'{}');skills.speed=s.speed||0;skills.zone=s.zone||0;skills.life=s.life||0}catch(e){}
   const claimedSkills=new Set(JSON.parse(localStorage.getItem('miniInvadersClaimed')||'[]'));
@@ -171,7 +171,7 @@ button:active{transform:scale(.985)}
   function makeStars(){stars=Array.from({length:40},(_,i)=>({x:(i*73+29)%W,y:(i*137+41)%H,r:(i%3)*.45+.5,a:.12+(i%5)*.06}));}
   function makeWave(){
     enemies=[];ebullets=[];formationOffset=0;formationDir=1;
-    const db=document.getElementById('deflectBtn');const dbr=document.getElementById('deflectBtnR');const show=(wave%5===0)?'block':'none';if(db)db.style.display=show;if(dbr)dbr.style.display=show;
+    const db=document.getElementById('deflectBtn');const dbr=document.getElementById('deflectBtnR');if(db)db.style.display='block';if(dbr)dbr.style.display='block';
     if(wave%10===0 && !claimedSkills.has(wave)){
       skillActive=true;
       const so=document.getElementById('skillOverlay');if(so)so.style.display='flex';
@@ -184,8 +184,8 @@ button:active{transform:scale(.985)}
       boss={x:W/2,y:90,hp:hp,maxHp:hp,dir:1,speed:90+(cycle-1)*10,alive:true,r:40,bob:0,shootTimer:2.8,descend:6+(cycle-1),color:col,cycle:cycle};
       const cols=7,gapX=43,startX=(W-(cols-1)*gapX)/2;
       for(let r=0;r<3;r++)for(let c=0;c<cols;c++)enemies.push({x:startX+c*gapX,y:72+r*gapY,row:r,alive:true,bob:Math.random()*6.28,radius:13});
-      formationOffset=0;formationDir=1;formationSpeed=12+(cycle-1)*2+snakeDefeats*2;descentSpeed=2+(cycle-1)*.5+snakeDefeats*0.5;
-      if(boss){boss.speed=90+(cycle-1)*10+snakeDefeats*5}
+      formationOffset=0;formationDir=1;formationSpeed=12+(cycle-1)*2+Math.min(snakeDefeats,10)*2;descentSpeed=2+(cycle-1)*.5+Math.min(snakeDefeats,10)*0.5;
+      if(boss){boss.speed=90+(cycle-1)*10+Math.min(snakeDefeats,10)*5}
       currentTempo=100;applyTempo();
       feedback='¡BOSS '+cycle+'!';feedbackUntil=performance.now()+1200;
       return;
@@ -195,7 +195,7 @@ button:active{transform:scale(.985)}
     const cols=Math.min(7+Math.floor((wave-1)/2),9),rows=Math.min(3+Math.floor((wave-1)/3),5);
     const gapX=43,gapY=44,startX=(W-(cols-1)*gapX)/2;
     for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)enemies.push({x:startX+c*gapX,y:72+r*gapY,row:r,alive:true,bob:Math.random()*6.28,radius:13});
-    formationSpeed=15+Math.min((wave-1)*1.25,12)+snakeDefeats*2;descentSpeed=3+Math.min((wave-1)*.25,2)+snakeDefeats*0.5;
+    formationSpeed=15+Math.min((wave-1)*1.25,12)+Math.min(snakeDefeats,10)*2;descentSpeed=3+Math.min((wave-1)*.25,2)+Math.min(snakeDefeats,10)*0.5;
   }
   // Vivorita come-marcianos: aparece aleatoriamente a partir del nivel 2
   if(wave>=2 && Math.random()<0.2){
@@ -204,7 +204,7 @@ button:active{transform:scale(.985)}
   function startGame(w,m){
     ensureAudio();
     w=w||1;m=m||'A';mode=m;
-    score=0;wave=w;kills=0;bullets=[];particles=[];powerups=[];ebullets=[];boss=null;hearts=[];snake=null;asteroids=[];ballX=LANE_LEFT;recordStart=best;recordBroken=false;recordFlashUntil=0;combo=0;comboDecayUntil=0;updateCombo();ballDir=1;ballSpeed=84+skills.speed;zoneX=260;zoneDir=-1;zoneSpeed=26+skills.zone;shipX=LANE_LEFT;pauseUntil=0;feedback='';feedbackUntil=0;slowUntil=0;doubleUntil=0;bigZoneUntil=0;pendingDeath=0;lives=3+skills.life;revivesUsed=0;freeShot=false;updateLives();updateKills();
+    score=0;wave=w;kills=0;bullets=[];particles=[];powerups=[];ebullets=[];boss=null;hearts=[];snake=null;asteroids=[];ballX=LANE_LEFT;recordStart=best;recordBroken=false;recordFlashUntil=0;combo=0;comboDecayUntil=0;missStreak=0;invulnerableUntil=0;updateCombo();ballDir=1;ballSpeed=84+skills.speed;zoneX=260;zoneDir=-1;zoneSpeed=26+skills.zone;shipX=LANE_LEFT;pauseUntil=0;feedback='';feedbackUntil=0;slowUntil=0;doubleUntil=0;bigZoneUntil=0;pendingDeath=0;lives=3+skills.life;revivesUsed=0;freeShot=false;updateLives();updateKills();
     scoreEl.textContent='0';waveEl.textContent=wave;makeWave();running=true;last=performance.now();currentTempo=(wave%5===0)?100:130;startMusic(currentTempo);
     overlay.classList.add('hidden');const _b=document.getElementById('startA');if(_b)_b.style.display='none';const _b2=document.getElementById('startB');if(_b2)_b2.style.display='none';requestAnimationFrame(loop);
   }
@@ -216,7 +216,7 @@ button:active{transform:scale(.985)}
     const _a=document.getElementById('startA');const _b=document.getElementById('startB');if(_a){_a.textContent='MODO A';_a.style.display='block'}if(_b){_b.textContent='MODO B';_b.style.display='block'}draw();
   }
   function loseLife(){
-    combo=0;updateCombo();lives--;updateLives();sfxFail();
+    combo=0;updateCombo();lives--;updateLives();sfxFail();invulnerableUntil=performance.now()+1500;
     explosionX=shipX;explosionY=H-68;explosionUntil=performance.now()+700;shakeUntil=performance.now()+400;
     for(let i=0;i<60;i++){const a=Math.random()*6.283;particles.push({x:explosionX,y:explosionY,vx:Math.cos(a)*(40+Math.random()*160),vy:Math.sin(a)*(40+Math.random()*160),life:.6,max:.6,r:2+Math.random()*4})}
     noise(.3,.15);
@@ -285,7 +285,7 @@ button:active{transform:scale(.985)}
       if(boss.x<30){boss.x=30;boss.dir=1}
       if(boss.x>W-30){boss.x=W-30;boss.dir=-1}
       boss.y+=boss.descend*dt;
-      if(boss.y>H-200){loseLife();return}
+      if(boss.y>H-200){if(performance.now()>=invulnerableUntil)loseLife();return}
       boss.shootTimer-=dt;
       if(boss.shootTimer<=0){
         boss.shootTimer=2.0+Math.random()*1.2;
@@ -298,7 +298,7 @@ button:active{transform:scale(.985)}
         if((formationDir>0&&max>W-14)||(formationDir<0&&min<14)){formationDir*=-1;for(const e of living)e.y+=12}
         formationOffset+=formationDir*formationSpeed*dt;
         for(const e of living){e.y+=descentSpeed*dt;e.bob+=dt*2}
-        if(living.some(e=>e.y>H-160)){loseLife();return}
+        if(living.some(e=>e.y>H-160)){if(performance.now()>=invulnerableUntil)loseLife();return}
       }
     }else if(living.length){
       const min=Math.min(...living.map(e=>e.x+formationOffset)),max=Math.max(...living.map(e=>e.x+formationOffset));
@@ -306,7 +306,7 @@ button:active{transform:scale(.985)}
       if((formationDir>0&&max>W-28)||(formationDir<0&&min<28)){formationDir*=-1;for(const e of living)e.y+=12}
       formationOffset+=formationDir*formationSpeed*slowMul*dt;
       for(const e of living){e.y+=descentSpeed*slowMul*dt;e.bob+=dt*2}
-      if(living.some(e=>e.y>H-160)){loseLife();return}
+      if(living.some(e=>e.y>H-160)){if(performance.now()>=invulnerableUntil)loseLife();return}
     }else if(!boss){
       wave++;waveEl.textContent=wave;sfxWave();makeWave();
     }
@@ -414,7 +414,8 @@ button:active{transform:scale(.985)}
     for(const a of asteroids){
       if(!a.alive)continue;
       if(Math.hypot(a.x-shipX,a.y-(H-68))<a.r+14){
-        a.alive=false;loseLife();
+        if(performance.now()>=invulnerableUntil){a.alive=false;loseLife()}
+        else {a.vx*=-1;a.vy*=-1}
       }
     }
     asteroids=asteroids.filter(a=>a.alive);
@@ -779,7 +780,12 @@ button:active{transform:scale(.985)}
     }
     // Exact same timing rule: the moving ball's CENTER must be inside the moving green zone.
     const zhTap=performance.now()<bigZoneUntil?80:ZONE_HALF;
-    if(!freeShot && Math.abs(ballX-zoneX)>zhTap){loseLife();return}
+    if(!freeShot && Math.abs(ballX-zoneX)>zhTap){
+      missStreak++;
+      if(missStreak>=3){missStreak=0;loseLife();return}
+      feedback='FALLO ('+missStreak+'/3)';feedbackUntil=performance.now()+600;sfxFail();draw();return
+    }
+    missStreak=0;
     if(freeShot){freeShot=false;feedback='¡DISPARO LIBRE!';feedbackUntil=performance.now()+400}
     shipX=ballX;
     fire();
