@@ -119,6 +119,10 @@ button:active{transform:scale(.985)}
   function sfxWave(){ensureAudio();[523,659,784].forEach((f,i)=>setTimeout(()=>tone(f,.1,'triangle',.14),i*90))}
   function sfxOver(){ensureAudio();tone(220,.4,'sawtooth',.2,-180);noise(.3,.1)}
   function sfxFail(){ensureAudio();tone(160,.18,'square',.14,-120)}
+  function sfxGameOverTune(){ensureAudio();[392,349,330,262,196,165].forEach((f,i)=>setTimeout(()=>tone(f,.2,'sawtooth',.18,-30),i*150));noise(.45,.14)}
+  function sfxCombo(mult){ensureAudio();const f=420+Math.min(mult,8)*55;tone(f,.07,'square',.12,140)}
+  function sfxPowerup(type){ensureAudio();if(type==='slow')tone(330,.12,'triangle',.14,-60);else if(type==='double'){tone(660,.08,'square',.14);setTimeout(()=>tone(880,.08,'square',.14),90)}else if(type==='zone')tone(220,.15,'sawtooth',.14,260);else if(type==='free'){tone(523,.1,'triangle',.14);setTimeout(()=>tone(784,.1,'triangle',.14),100);setTimeout(()=>tone(1047,.12,'triangle',.14),200)}}
+  function sfxHeart(){ensureAudio();tone(880,.12,'triangle',.15,120)}
   function updateLives(){const el=document.getElementById('lives');if(el)el.textContent='♥'.repeat(Math.max(0,lives))}
   function updateKills(){const el=document.getElementById('kills');if(el)el.textContent='Kills:'+kills}
   function updateCombo(){const el=document.getElementById('combo');if(el)el.textContent='Combo x'+Math.max(1,combo)}
@@ -202,7 +206,7 @@ button:active{transform:scale(.985)}
     overlay.classList.add('hidden');const _b=document.getElementById('startA');if(_b)_b.style.display='none';const _b2=document.getElementById('startB');if(_b2)_b2.style.display='none';requestAnimationFrame(loop);
   }
   function endGame(){
-    running=false;stopMusic();sfxOver();overlay.classList.remove('hidden');titleEl.innerHTML='FIN DE<br>PARTIDA';
+    running=false;stopMusic();sfxOver();sfxGameOverTune();overlay.classList.remove('hidden');titleEl.innerHTML='FIN DE<br>PARTIDA';
     if(mode==='A')lossesA++;
     if(mode==='B')descEl.innerHTML=`Kills: <b>${kills}</b><br>Récord: <b>${recordB}</b>`;
     else descEl.innerHTML=`Puntuación: <b>${score}</b><br>Oleada alcanzada: ${wave}`;
@@ -318,7 +322,7 @@ button:active{transform:scale(.985)}
         const ex=e.x+formationOffset,ey=e.y+Math.sin(e.bob)*2;
         if(Math.hypot(head.x-ex,head.y-ey)<(14+e.radius)){
           e.alive=false;snake.eaten++;
-          combo++;comboDecayUntil=performance.now()+4000;const smult=Math.min(combo,8);score+=15*smult;scoreEl.textContent=score;updateCombo();
+          combo++;comboDecayUntil=performance.now()+4000;const smult=Math.min(combo,8);score+=15*smult;scoreEl.textContent=score;updateCombo();sfxCombo(smult);
           // crecer
           snake.segments.push({...snake.segments[snake.segments.length-1]});
           burst(ex,ey);sfxHit();
@@ -377,7 +381,7 @@ button:active{transform:scale(.985)}
       if(boss&&boss.alive){
         const dx=b.x-boss.x,dy=b.y-(boss.y+Math.sin(boss.bob)*2);
         if(dx*dx+dy*dy<(boss.r+6)**2){boss.hp--;b.dead=true;burst(boss.x,boss.y);sfxHit();
-          if(boss.hp<=0){boss.alive=false;combo++;comboDecayUntil=performance.now()+4000;score+=500+(boss.cycle-1)*200;scoreEl.textContent=score;updateCombo();feedback='¡BOSS DERROTADO!';feedbackUntil=performance.now()+1500;sfxWave();
+          if(boss.hp<=0){boss.alive=false;combo++;comboDecayUntil=performance.now()+4000;score+=500+(boss.cycle-1)*200;scoreEl.textContent=score;updateCombo();sfxCombo(combo);feedback='¡BOSS DERROTADO!';feedbackUntil=performance.now()+1500;sfxWave();
             if(score>best){if(!recordBroken&&score>recordStart)triggerRecordBreak();best=score;bestEl.textContent=best;try{localStorage.setItem('miniInvadersBest',String(best))}catch(err){}}
             wave++;waveEl.textContent=wave;boss=null;makeWave();
           }
@@ -386,7 +390,7 @@ button:active{transform:scale(.985)}
       for(const e of enemies){
         if(!e.alive)continue;
         const dx=b.x-(e.x+formationOffset),dy=b.y-(e.y+Math.sin(e.bob)*2);
-        if(dx*dx+dy*dy<(e.radius+5)**2){e.alive=false;b.dead=true;combo++;comboDecayUntil=performance.now()+4000;const mult=Math.min(combo,8);const pts=10*mult;score+=pts;scoreEl.textContent=score;updateCombo();if(mult>1){feedback='COMBO x'+mult;feedbackUntil=performance.now()+500}burst(e.x+formationOffset,e.y);sfxHit();
+        if(dx*dx+dy*dy<(e.radius+5)**2){e.alive=false;b.dead=true;combo++;comboDecayUntil=performance.now()+4000;const mult=Math.min(combo,8);const pts=10*mult;score+=pts;scoreEl.textContent=score;updateCombo();sfxCombo(mult);if(mult>1){feedback='COMBO x'+mult;feedbackUntil=performance.now()+500}burst(e.x+formationOffset,e.y);sfxHit();
           if(Math.random()<0.22){const types=['slow','double','zone'];powerups.push({x:e.x+formationOffset,y:e.y,type:types[Math.floor(Math.random()*types.length)],vy:40,alive:true,r:12})}
           if(Math.random()<0.07){powerups.push({x:e.x+formationOffset,y:e.y,type:'free',vy:40,alive:true,r:12})}
           if(Math.random()<0.08){hearts.push({x:e.x+formationOffset,y:e.y,vy:35,alive:true,r:14})}
@@ -444,7 +448,7 @@ button:active{transform:scale(.985)}
     for(const h of hearts)h.y+=h.vy*dt;
     hearts=hearts.filter(h=>{
       if(h.y>H-118){
-        if(Math.abs(h.x-shipX)<28){lives=Math.min(5,lives+1);updateLives();feedback='¡+1 VIDA!';feedbackUntil=performance.now()+800;sfxWave();return false}
+        if(Math.abs(h.x-shipX)<28){lives=Math.min(5,lives+1);updateLives();feedback='¡+1 VIDA!';feedbackUntil=performance.now()+800;sfxHeart();return false}
         if(h.y>H)return false;
       }
       return true;
@@ -457,7 +461,7 @@ button:active{transform:scale(.985)}
           if(pu.type==='slow')slowUntil=performance.now()+8000;
           if(pu.type==='double')doubleUntil=performance.now()+8000;
           if(pu.type==='zone')bigZoneUntil=performance.now()+8000;
-          if(pu.type==='free'){freeShot=true;feedback='¡DISPARO LIBRE!';feedbackUntil=performance.now()+900;sfxWave();return false}
+          if(pu.type==='free'){freeShot=true;feedback='¡DISPARO LIBRE!';feedbackUntil=performance.now()+900;sfxPowerup('free');return false}
           feedback=pu.type==='slow'?'LENTO':pu.type==='double'?'DOBLE':'ZONA +';
           feedbackUntil=performance.now()+900;
           sfxWave();
