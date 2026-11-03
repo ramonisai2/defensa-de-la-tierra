@@ -28,7 +28,7 @@ button:active{transform:scale(.985)}
 <body>
 <div id="game">
 <header>
-  <div><div class="label">PUNTOS</div><div class="value" id="score">0</div></div>
+  <div><div class="label">PUNTOS</div><div class="value" id="score">0</div><div id="combo" style="font-size:12px;color:#ffbd68;margin-top:2px">Combo x1</div></div>
   <div style="text-align:center"><div class="label">OLEADA</div><div class="value" id="wave">1</div><div id="lives" style="font-size:13px;color:#ff6b9d;margin-top:2px">♥♥♥</div><div id="kills" style="font-size:12px;color:#b8f36b;margin-top:2px">Kills:0</div></div>
   <div style="text-align:right"><div class="label">RÉCORD</div><div class="value" id="best">0</div></div>
 </header>
@@ -86,7 +86,7 @@ button:active{transform:scale(.985)}
   let recordStart=0,recordBroken=false,recordFlashUntil=0;
   let formationOffset=0,formationDir=1,formationSpeed=15,descentSpeed=3;
   let ballX=LANE_LEFT,ballDir=1,ballSpeed=84,zoneX=260,zoneDir=-1,zoneSpeed=26,shipX=LANE_LEFT;
-  let pauseUntil=0,feedback='',feedbackUntil=0,slowUntil=0,doubleUntil=0,bigZoneUntil=0,lives=3,adActive=false,adUntil=0,mode='A',kills=0,recordB=0,revivesUsed=0,lossesA=0,skillActive=false,freeShot=false;
+  let pauseUntil=0,feedback='',feedbackUntil=0,slowUntil=0,doubleUntil=0,bigZoneUntil=0,lives=3,adActive=false,adUntil=0,mode='A',kills=0,recordB=0,revivesUsed=0,lossesA=0,skillActive=false,freeShot=false,combo=0,comboDecayUntil=0;
   let skills={speed:0,zone:0,life:0};
   try{const s=JSON.parse(localStorage.getItem('miniInvadersSkills')||'{}');skills.speed=s.speed||0;skills.zone=s.zone||0;skills.life=s.life||0}catch(e){}
   const claimedSkills=new Set(JSON.parse(localStorage.getItem('miniInvadersClaimed')||'[]'));
@@ -119,6 +119,7 @@ button:active{transform:scale(.985)}
   function sfxFail(){ensureAudio();tone(160,.18,'square',.14,-120)}
   function updateLives(){const el=document.getElementById('lives');if(el)el.textContent='♥'.repeat(Math.max(0,lives))}
   function updateKills(){const el=document.getElementById('kills');if(el)el.textContent='Kills:'+kills}
+  function updateCombo(){const el=document.getElementById('combo');if(el)el.textContent='Combo x'+Math.max(1,combo)}
   function triggerRecordBreak(){
     recordBroken=true;recordFlashUntil=performance.now()+1800;
     feedback='¡NUEVO RÉCORD!';feedbackUntil=performance.now()+1800;
@@ -194,7 +195,7 @@ button:active{transform:scale(.985)}
   function startGame(w,m){
     ensureAudio();
     w=w||1;m=m||'A';mode=m;
-    score=0;wave=w;kills=0;bullets=[];particles=[];powerups=[];ebullets=[];boss=null;hearts=[];snake=null;ballX=LANE_LEFT;recordStart=best;recordBroken=false;recordFlashUntil=0;ballDir=1;ballSpeed=84+skills.speed;zoneX=260;zoneDir=-1;zoneSpeed=26+skills.zone;shipX=LANE_LEFT;pauseUntil=0;feedback='';feedbackUntil=0;slowUntil=0;doubleUntil=0;bigZoneUntil=0;pendingDeath=0;lives=3+skills.life;revivesUsed=0;freeShot=false;updateLives();updateKills();
+    score=0;wave=w;kills=0;bullets=[];particles=[];powerups=[];ebullets=[];boss=null;hearts=[];snake=null;ballX=LANE_LEFT;recordStart=best;recordBroken=false;recordFlashUntil=0;combo=0;comboDecayUntil=0;updateCombo();ballDir=1;ballSpeed=84+skills.speed;zoneX=260;zoneDir=-1;zoneSpeed=26+skills.zone;shipX=LANE_LEFT;pauseUntil=0;feedback='';feedbackUntil=0;slowUntil=0;doubleUntil=0;bigZoneUntil=0;pendingDeath=0;lives=3+skills.life;revivesUsed=0;freeShot=false;updateLives();updateKills();
     scoreEl.textContent='0';waveEl.textContent=wave;makeWave();running=true;last=performance.now();currentTempo=(wave%5===0)?100:130;startMusic(currentTempo);
     overlay.classList.add('hidden');const _b=document.getElementById('startA');if(_b)_b.style.display='none';const _b2=document.getElementById('startB');if(_b2)_b2.style.display='none';requestAnimationFrame(loop);
   }
@@ -206,7 +207,7 @@ button:active{transform:scale(.985)}
     const _a=document.getElementById('startA');const _b=document.getElementById('startB');if(_a){_a.textContent='MODO A';_a.style.display='block'}if(_b){_b.textContent='MODO B';_b.style.display='block'}draw();
   }
   function loseLife(){
-    lives--;updateLives();sfxFail();
+    combo=0;updateCombo();lives--;updateLives();sfxFail();
     if(lives<=0){
       if(mode==='B'){
         if(revivesUsed>=3){endGame();return}
@@ -222,7 +223,7 @@ button:active{transform:scale(.985)}
     feedback='VIDA PERDIDA';feedbackUntil=performance.now()+900;
   }
   function revive(){
-    revivesUsed++;lives=1;updateLives();
+    revivesUsed++;lives=1;combo=0;updateCombo();updateLives();
     bullets=[];ebullets=[];particles=[];
     ballX=LANE_LEFT;ballDir=1;ballSpeed=Math.max(54,ballSpeed-8);zoneX=260;zoneDir=-1;shipX=LANE_LEFT;pauseUntil=performance.now()+1200;
     feedback='¡REVIVIDO!';feedbackUntil=performance.now()+900;
@@ -258,6 +259,7 @@ button:active{transform:scale(.985)}
       else if(now>pendingDeath){pendingDeath=0;loseLife();return}
     }
     for(const s of stars){s.y+=5*dt;if(s.y>H)s.y=0}
+    if(combo>0 && performance.now()>comboDecayUntil){combo=0;updateCombo()}
     if(now>=pauseUntil){
       [ballX,ballDir]=reflect(ballX,ballDir,ballSpeed,dt,LANE_LEFT,LANE_RIGHT);
       const zh=now<bigZoneUntil?60:ZONE_HALF;
@@ -311,7 +313,7 @@ button:active{transform:scale(.985)}
         const ex=e.x+formationOffset,ey=e.y+Math.sin(e.bob)*2;
         if(Math.hypot(head.x-ex,head.y-ey)<(14+e.radius)){
           e.alive=false;snake.eaten++;
-          score+=15;scoreEl.textContent=score;
+          combo++;comboDecayUntil=performance.now()+4000;const smult=Math.min(combo,8);score+=15*smult;scoreEl.textContent=score;updateCombo();
           // crecer
           snake.segments.push({...snake.segments[snake.segments.length-1]});
           burst(ex,ey);sfxHit();
@@ -370,7 +372,7 @@ button:active{transform:scale(.985)}
       if(boss&&boss.alive){
         const dx=b.x-boss.x,dy=b.y-(boss.y+Math.sin(boss.bob)*2);
         if(dx*dx+dy*dy<(boss.r+6)**2){boss.hp--;b.dead=true;burst(boss.x,boss.y);sfxHit();
-          if(boss.hp<=0){boss.alive=false;score+=500+(boss.cycle-1)*200;scoreEl.textContent=score;feedback='¡BOSS DERROTADO!';feedbackUntil=performance.now()+1500;sfxWave();
+          if(boss.hp<=0){boss.alive=false;combo++;comboDecayUntil=performance.now()+4000;score+=500+(boss.cycle-1)*200;scoreEl.textContent=score;updateCombo();feedback='¡BOSS DERROTADO!';feedbackUntil=performance.now()+1500;sfxWave();
             if(score>best){if(!recordBroken&&score>recordStart)triggerRecordBreak();best=score;bestEl.textContent=best;try{localStorage.setItem('miniInvadersBest',String(best))}catch(err){}}
             wave++;waveEl.textContent=wave;boss=null;makeWave();
           }
@@ -379,7 +381,7 @@ button:active{transform:scale(.985)}
       for(const e of enemies){
         if(!e.alive)continue;
         const dx=b.x-(e.x+formationOffset),dy=b.y-(e.y+Math.sin(e.bob)*2);
-        if(dx*dx+dy*dy<(e.radius+5)**2){e.alive=false;b.dead=true;score+=10;scoreEl.textContent=score;burst(e.x+formationOffset,e.y);sfxHit();
+        if(dx*dx+dy*dy<(e.radius+5)**2){e.alive=false;b.dead=true;combo++;comboDecayUntil=performance.now()+4000;const mult=Math.min(combo,8);const pts=10*mult;score+=pts;scoreEl.textContent=score;updateCombo();if(mult>1){feedback='COMBO x'+mult;feedbackUntil=performance.now()+500}burst(e.x+formationOffset,e.y);sfxHit();
           if(Math.random()<0.22){const types=['slow','double','zone'];powerups.push({x:e.x+formationOffset,y:e.y,type:types[Math.floor(Math.random()*types.length)],vy:40,alive:true,r:12})}
           if(Math.random()<0.07){powerups.push({x:e.x+formationOffset,y:e.y,type:'free',vy:40,alive:true,r:12})}
           if(Math.random()<0.08){hearts.push({x:e.x+formationOffset,y:e.y,vy:35,alive:true,r:14})}
