@@ -305,10 +305,21 @@ button:active{transform:scale(.985)}
           if(Math.random()<0.22){const types=['slow','double','zone'];powerups.push({x:e.x+formationOffset,y:e.y,type:types[Math.floor(Math.random()*types.length)],vy:40,alive:true,r:12})}
           if(Math.random()<0.07){powerups.push({x:e.x+formationOffset,y:e.y,type:'free',vy:40,alive:true,r:12})}
           if(Math.random()<0.08){hearts.push({x:e.x+formationOffset,y:e.y,vy:35,alive:true,r:14})}
-          if(score>0 && score%500===0){
-            lives=Math.min(5,lives+1);updateLives();
-            const types=['slow','double','zone'];powerups.push({x:W/2,y:80,type:types[Math.floor(Math.random()*types.length)],vy:30,alive:true,r:12});
-            feedback='¡RECOMPENSA POR PUNTOS!';feedbackUntil=performance.now()+1000;sfxWave();
+          // Recompensas por puntos (hitos)
+          if(score>0){
+            if(score%250===0){
+              const types=['slow','double','zone'];powerups.push({x:W/2,y:80,type:types[Math.floor(Math.random()*types.length)],vy:30,alive:true,r:12});
+              feedback='¡POWERUP!';feedbackUntil=performance.now()+800;sfxWave();
+            }
+            if(score%500===0){
+              lives=Math.min(5,lives+1);updateLives();
+              feedback='¡+1 VIDA POR PUNTOS!';feedbackUntil=performance.now()+1000;sfxWave();
+            }
+            if(score%1000===0){
+              lives=Math.min(5,lives+1);updateLives();
+              const types=['slow','double','zone'];for(let i=0;i<2;i++)powerups.push({x:W/2+(i?40:-40),y:80,type:types[Math.floor(Math.random()*types.length)],vy:30,alive:true,r:12});
+              feedback='¡GRAN RECOMPENSA!';feedbackUntil=performance.now()+1400;sfxWave();noise(.2,.12);
+            }
           }
           if(mode==='B'){
             kills++;updateKills();if(kills>recordB){recordB=kills;try{localStorage.setItem('miniInvadersModeBRecord',String(recordB))}catch(e){}}
@@ -316,6 +327,11 @@ button:active{transform:scale(.985)}
               lives=Math.min(5,lives+1);updateLives();
               const types=['slow','double','zone'];powerups.push({x:W/2,y:80,type:types[Math.floor(Math.random()*types.length)],vy:30,alive:true,r:12});
               feedback='¡RECOMPENSA POR KILLS!';feedbackUntil=performance.now()+1000;sfxWave();
+            }
+            if(kills>0 && kills%50===0){
+              lives=Math.min(5,lives+1);updateLives();
+              const types=['slow','double','zone'];for(let i=0;i<2;i++)powerups.push({x:W/2+(i?40:-40),y:80,type:types[Math.floor(Math.random()*types.length)],vy:30,alive:true,r:12});
+              feedback='¡GRAN RECOMPENSA POR KILLS!';feedbackUntil=performance.now()+1400;sfxWave();noise(.2,.12);
             }
           }
           if(score>best){best=score;bestEl.textContent=best;try{localStorage.setItem('miniInvadersBest',String(best))}catch(err){}}
