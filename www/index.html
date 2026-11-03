@@ -63,12 +63,14 @@ button:active{transform:scale(.985)}
   </div>
 </main>
 <footer>
-  <button id="startA">MODO A (Principal)</button>
-  <button id="startB" style="background:#49d9ff;color:#0a1020">MODO B (Infinito)</button>
+  <div style="display:flex;gap:8px;width:100%;max-width:320px">
+    <button id="startA" style="flex:1;max-width:none">MODO A</button>
+    <button id="startB" style="flex:1;max-width:none;background:#49d9ff;color:#0a1020">MODO B</button>
+    <button id="muteBtn" style="flex:0 0 92px;max-width:92px;padding:8px 6px;font-size:11px;border-radius:12px">🔊 ON</button>
+  </div>
   <div id="fireHint">TOCA SOLO CUANDO LA ESFERA ESTÉ EN LA ZONA VERDE</div>
   <button id="deflectBtn" style="position:absolute;left:6px;top:50%;transform:translateY(-50%);z-index:5;max-width:74px;padding:10px 6px;font-size:11px;border-radius:12px;background:#49d9ff;color:#0a1020;font-weight:900">🛡️<br>Deflector</button>
   <button id="deflectBtnR" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);z-index:5;max-width:74px;padding:10px 6px;font-size:11px;border-radius:12px;background:#49d9ff;color:#0a1020;font-weight:900">🛡️<br>Deflector</button>
-  <button id="muteBtn" style="max-width:160px;padding:8px 14px;font-size:12px;border-radius:12px">🔊 Música: ON</button>
 </footer>
 </div>
 <script>
@@ -721,7 +723,7 @@ button:active{transform:scale(.985)}
   window.addEventListener('blur',()=>stopMusic());
   const muteBtn=document.getElementById('muteBtn');
   let musicEnabled=true,musicTimer=null,musicStep=0,currentTempo=130;
-  muteBtn.addEventListener('click',()=>{musicEnabled=!musicEnabled;muteBtn.textContent=musicEnabled?'🔊 Música: ON':'🔇 Música: OFF';if(!musicEnabled)stopMusic();else if(running)startMusic()});
+  muteBtn.addEventListener('click',()=>{musicEnabled=!musicEnabled;muteBtn.textContent=musicEnabled?'🔊 ON':'🔇 OFF';if(!musicEnabled)stopMusic();else if(running)startMusic()});
   const deflectBtn=document.getElementById('deflectBtn');
   const deflectBtnR=document.getElementById('deflectBtnR');
   let deflectCooldown=0,deflectorActiveUntil=0,pendingDeath=0;
