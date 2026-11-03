@@ -80,10 +80,10 @@ button:active{transform:scale(.985)}
   const scoreEl=document.getElementById('score'),waveEl=document.getElementById('wave'),bestEl=document.getElementById('best');
   const overlay=document.getElementById('overlay'),titleEl=document.getElementById('title'),descEl=document.getElementById('description'),startBtn=document.getElementById('start');
 
-  const W=420,H=700,LANE_Y=H-120,LANE_LEFT=42,LANE_RIGHT=378,BALL_R=9,ZONE_HALF=38;
+  const W=420,H=700,LANE_Y=H-120,LANE_LEFT=42,LANE_RIGHT=378,BALL_R=9,ZONE_HALF=52;
   let dpr=1,running=false,last=0,score=0,wave=1,best=0;
   let enemies=[],bullets=[],particles=[],stars=[],powerups=[],ebullets=[],boss=null,hearts=[],snake=null;
-  let recordStart=0,recordBroken=false,recordFlashUntil=0;
+  let recordStart=0,recordBroken=false,recordFlashUntil=0,explosionUntil=0,explosionX=0,explosionY=0,shakeUntil=0;
   let formationOffset=0,formationDir=1,formationSpeed=15,descentSpeed=3;
   let ballX=LANE_LEFT,ballDir=1,ballSpeed=84,zoneX=260,zoneDir=-1,zoneSpeed=26,shipX=LANE_LEFT;
   let pauseUntil=0,feedback='',feedbackUntil=0,slowUntil=0,doubleUntil=0,bigZoneUntil=0,lives=3,adActive=false,adUntil=0,mode='A',kills=0,recordB=0,revivesUsed=0,lossesA=0,skillActive=false,freeShot=false,combo=0,comboDecayUntil=0;
@@ -208,6 +208,9 @@ button:active{transform:scale(.985)}
   }
   function loseLife(){
     combo=0;updateCombo();lives--;updateLives();sfxFail();
+    explosionX=shipX;explosionY=H-68;explosionUntil=performance.now()+700;shakeUntil=performance.now()+400;
+    for(let i=0;i<60;i++){const a=Math.random()*6.283;particles.push({x:explosionX,y:explosionY,vx:Math.cos(a)*(40+Math.random()*160),vy:Math.sin(a)*(40+Math.random()*160),life:.6,max:.6,r:2+Math.random()*4})}
+    noise(.3,.15);
     if(lives<=0){
       if(mode==='B'){
         if(revivesUsed>=3){endGame();return}
@@ -262,7 +265,7 @@ button:active{transform:scale(.985)}
     if(combo>0 && performance.now()>comboDecayUntil){combo=0;updateCombo()}
     if(now>=pauseUntil){
       [ballX,ballDir]=reflect(ballX,ballDir,ballSpeed,dt,LANE_LEFT,LANE_RIGHT);
-      const zh=now<bigZoneUntil?60:ZONE_HALF;
+      const zh=now<bigZoneUntil?80:ZONE_HALF;
       [zoneX,zoneDir]=reflect(zoneX,zoneDir,zoneSpeed,dt,LANE_LEFT+zh,LANE_RIGHT-zh);
     }
     // The ship tracks the bouncing marker; a successful timing hit determines shot position.
@@ -274,7 +277,7 @@ button:active{transform:scale(.985)}
       if(boss.x<45){boss.x=45;boss.dir=1}
       if(boss.x>W-45){boss.x=W-45;boss.dir=-1}
       boss.y+=boss.descend*dt;
-      if(boss.y>H-260){loseLife();return}
+      if(boss.y>H-200){loseLife();return}
       boss.shootTimer-=dt;
       if(boss.shootTimer<=0){
         boss.shootTimer=2.0+Math.random()*1.2;
@@ -287,7 +290,7 @@ button:active{transform:scale(.985)}
         if((formationDir>0&&max>W-28)||(formationDir<0&&min<28)){formationDir*=-1;for(const e of living)e.y+=12}
         formationOffset+=formationDir*formationSpeed*dt;
         for(const e of living){e.y+=descentSpeed*dt;e.bob+=dt*2}
-        if(living.some(e=>e.y>H-220)){loseLife();return}
+        if(living.some(e=>e.y>H-160)){loseLife();return}
       }
     }else if(living.length){
       const min=Math.min(...living.map(e=>e.x+formationOffset)),max=Math.max(...living.map(e=>e.x+formationOffset));
@@ -295,7 +298,7 @@ button:active{transform:scale(.985)}
       if((formationDir>0&&max>W-28)||(formationDir<0&&min<28)){formationDir*=-1;for(const e of living)e.y+=12}
       formationOffset+=formationDir*formationSpeed*slowMul*dt;
       for(const e of living){e.y+=descentSpeed*slowMul*dt;e.bob+=dt*2}
-      if(living.some(e=>e.y>H-220)){loseLife();return}
+      if(living.some(e=>e.y>H-160)){loseLife();return}
     }else if(!boss){
       wave++;waveEl.textContent=wave;sfxWave();makeWave();
     }
@@ -545,6 +548,8 @@ button:active{transform:scale(.985)}
     ctx.shadowBlur=0;ctx.restore();
   }
   function draw(){
+    const shaking=shakeUntil>performance.now();
+    if(shaking){ctx.save();ctx.translate((Math.random()-.5)*10,(Math.random()-.5)*10)}
     if(bgReady){ctx.drawImage(bgImg,0,0,W,H)}else{ctx.clearRect(0,0,W,H)};
     for(const s of stars){ctx.globalAlpha=s.a;ctx.fillStyle='#dce9ff';ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,6.283);ctx.fill()}ctx.globalAlpha=1;
     if(recordFlashUntil>performance.now()){
@@ -554,7 +559,7 @@ button:active{transform:scale(.985)}
       g.addColorStop(1,'rgba(255,215,0,0)');
       ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
     }
-    const readyNow=Math.abs(ballX-zoneX)<=(performance.now()<bigZoneUntil?60:ZONE_HALF);
+    const readyNow=Math.abs(ballX-zoneX)<=(performance.now()<bigZoneUntil?80:ZONE_HALF);
     if(running&&readyNow){
       const g=ctx.createLinearGradient(0,H,0,H/2);
       g.addColorStop(0,'rgba(184,243,107,0.35)');
@@ -614,7 +619,7 @@ button:active{transform:scale(.985)}
     ctx.beginPath();ctx.moveTo(LANE_LEFT,LANE_Y);ctx.lineTo(LANE_RIGHT,LANE_Y);ctx.strokeStyle='rgba(151,174,211,.24)';ctx.lineWidth=7;ctx.lineCap='round';ctx.stroke();
     ctx.beginPath();ctx.moveTo(zoneX-ZONE_HALF,LANE_Y);ctx.lineTo(zoneX+ZONE_HALF,LANE_Y);ctx.strokeStyle='rgba(184,243,107,.25)';ctx.lineWidth=24;ctx.stroke();
     ctx.beginPath();ctx.moveTo(zoneX-ZONE_HALF,LANE_Y);ctx.lineTo(zoneX+ZONE_HALF,LANE_Y);ctx.strokeStyle='#b8f36b';ctx.lineWidth=4;ctx.stroke();
-    const readyBall=Math.abs(ballX-zoneX)<=(performance.now()<bigZoneUntil?60:ZONE_HALF);
+    const readyBall=Math.abs(ballX-zoneX)<=(performance.now()<bigZoneUntil?80:ZONE_HALF);
     let ballGrad;
     if(readyBall){
       ballGrad=ctx.createRadialGradient(ballX-3,LANE_Y-4,1,ballX,LANE_Y,BALL_R+1);
@@ -667,7 +672,14 @@ button:active{transform:scale(.985)}
       ctx.fillText(pu.type==='slow'?'S':pu.type==='double'?'2':pu.type==='free'?'F':'Z',pu.x,pu.y);ctx.textBaseline='alphabetic';
     }
     for(const p of particles){ctx.globalAlpha=Math.max(0,p.life/p.max);ctx.fillStyle='#d9ffad';ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,6.283);ctx.fill()}ctx.globalAlpha=1;
+    if(explosionUntil>performance.now()){
+      const t=1-(explosionUntil-performance.now())/700;
+      ctx.shadowBlur=20;ctx.shadowColor='#ff6a3c';ctx.strokeStyle='rgba(255,106,60,'+(1-t)+')';ctx.lineWidth=6;
+      ctx.beginPath();ctx.arc(explosionX,explosionY,10+t*90,0,6.283);ctx.stroke();ctx.shadowBlur=0;
+      ctx.fillStyle='rgba(255,215,0,'+(0.6*(1-t))+')';ctx.beginPath();ctx.arc(explosionX,explosionY,8+t*40,0,6.283);ctx.fill();
+    }
     if(feedback&&performance.now()<feedbackUntil){ctx.font='bold 13px system-ui';ctx.textAlign='center';ctx.fillStyle='#d9ffad';ctx.fillText(feedback,W/2,LANE_Y+34)}
+    if(shaking)ctx.restore();
   }
   function loop(now){if(!running)return;const dt=Math.min((now-last)/1000,.04);last=now;update(dt,now);draw();if(running)requestAnimationFrame(loop)}
   function tap(e){
@@ -683,7 +695,7 @@ button:active{transform:scale(.985)}
       sfxShoot();draw();return;
     }
     // Exact same timing rule: the moving ball's CENTER must be inside the moving green zone.
-    const zhTap=performance.now()<bigZoneUntil?60:ZONE_HALF;
+    const zhTap=performance.now()<bigZoneUntil?80:ZONE_HALF;
     if(!freeShot && Math.abs(ballX-zoneX)>zhTap){loseLife();return}
     if(freeShot){freeShot=false;feedback='¡DISPARO LIBRE!';feedbackUntil=performance.now()+400}
     shipX=ballX;
