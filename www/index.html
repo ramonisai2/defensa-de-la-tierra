@@ -9,7 +9,7 @@
 *{box-sizing:border-box}
 html,body{margin:0;width:100%;height:100%;overflow:hidden}
 body{background:#090e1c;color:#edf4ff;font-family:system-ui,-apple-system,Segoe UI,sans-serif;display:grid;place-items:center;touch-action:manipulation;user-select:none}
-#game{width:min(100vw,480px);height:100vh;height:100dvh;max-height:900px;display:flex;flex-direction:column;position:relative;background:radial-gradient(ellipse at 50% 30%,#182745 0%,#0c1426 55%,#080d18 100%);overflow:hidden}
+#game{width:min(100vw,520px);height:100vh;height:100dvh;max-height:100vh;display:flex;flex-direction:column;position:relative;background:radial-gradient(ellipse at 50% 30%,#182745 0%,#0c1426 55%,#080d18 100%);overflow:hidden}
 header{height:72px;flex:none;padding:16px 22px 8px;display:flex;justify-content:space-between;align-items:center;z-index:2}
 .label{font-size:10px;letter-spacing:2px;color:#8192b4;font-weight:800}
 .value{font-size:23px;font-weight:850;font-variant-numeric:tabular-nums}
@@ -71,7 +71,6 @@ button:active{transform:scale(.985)}
     <button id="muteBtn" style="flex:0 0 92px;max-width:92px;padding:8px 6px;font-size:11px;border-radius:12px">🔊 ON</button>
   </div>
   <div id="fireHint">TOCA SOLO CUANDO LA ESFERA ESTÉ EN LA ZONA VERDE</div>
-  <button id="spawnSnakeBtn" style="max-width:120px;padding:6px 10px;font-size:11px;border-radius:10px;background:#9d4edd;color:#fff">🐍 Spawn vivora</button>
   <button id="deflectBtn" style="position:absolute;left:6px;top:50%;transform:translateY(-50%);z-index:5;max-width:74px;padding:10px 6px;font-size:11px;border-radius:12px;background:#49d9ff;color:#0a1020;font-weight:900">🛡️<br>Deflector</button>
   <button id="deflectBtnR" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);z-index:5;max-width:74px;padding:10px 6px;font-size:11px;border-radius:12px;background:#49d9ff;color:#0a1020;font-weight:900">🛡️<br>Deflector</button>
 </footer>
@@ -857,10 +856,7 @@ button:active{transform:scale(.985)}
   }
   deflectBtn.addEventListener('click',activateDeflector);
   deflectBtnR.addEventListener('click',activateDeflector);
-const spawnSnakeBtn=document.getElementById('spawnSnakeBtn');
-if(spawnSnakeBtn)spawnSnakeBtn.addEventListener('click',(e)=>{e.preventDefault();e.stopPropagation();if(!running)return;
-  snake={segments:[{x:W/2,y:50}],vx:(Math.random()>.5?1:-1)*55,vy:35,alive:true,eaten:0};
-  feedback='¡VIVORA INVOCADA!';feedbackUntil=performance.now()+900;sfxWave();});
+
   makeStars();makeWave();resize();draw();
 })();
 </script>
