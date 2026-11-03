@@ -282,8 +282,8 @@ button:active{transform:scale(.985)}
     if(boss&&boss.alive){
       boss.bob+=dt*2;
       boss.x+=boss.dir*boss.speed*dt;
-      if(boss.x<45){boss.x=45;boss.dir=1}
-      if(boss.x>W-45){boss.x=W-45;boss.dir=-1}
+      if(boss.x<30){boss.x=30;boss.dir=1}
+      if(boss.x>W-30){boss.x=W-30;boss.dir=-1}
       boss.y+=boss.descend*dt;
       if(boss.y>H-200){loseLife();return}
       boss.shootTimer-=dt;
@@ -295,7 +295,7 @@ button:active{transform:scale(.985)}
       // ayudantes del boss
       if(living.length){
         const min=Math.min(...living.map(e=>e.x+formationOffset)),max=Math.max(...living.map(e=>e.x+formationOffset));
-        if((formationDir>0&&max>W-28)||(formationDir<0&&min<28)){formationDir*=-1;for(const e of living)e.y+=12}
+        if((formationDir>0&&max>W-14)||(formationDir<0&&min<14)){formationDir*=-1;for(const e of living)e.y+=12}
         formationOffset+=formationDir*formationSpeed*dt;
         for(const e of living){e.y+=descentSpeed*dt;e.bob+=dt*2}
         if(living.some(e=>e.y>H-160)){loseLife();return}
